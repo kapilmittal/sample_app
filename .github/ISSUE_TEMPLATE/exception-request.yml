@@ -1,0 +1,122 @@
+name: Sentinel Policy Exception Request
+description: Request a time-bound exception to a Sentinel policy
+title: "[Exception] <policy> — <workspace>"
+labels: ["exception-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Policy Exception Request
+        Fill in every required field. Once submitted, this request is validated
+        and — if approved — a PR is opened adding it to the exceptions file.
+        **Submitting this form does not grant an exception; it only proposes one.**
+
+  - type: input
+    id: organization
+    attributes:
+      label: TFE Organization
+      placeholder: e.g. cnlz-gcp-org
+    validations:
+      required: true
+
+  - type: input
+    id: workspace_name
+    attributes:
+      label: Workspace name
+      placeholder: e.g. crypto-mgmt-prod
+    validations:
+      required: true
+
+  - type: input
+    id: workspace_id
+    attributes:
+      label: Workspace ID
+      description: The TFE workspace ID (starts with ws-)
+      placeholder: e.g. ws-AbCdEf123456
+    validations:
+      required: true
+
+  - type: dropdown
+    id: policy
+    attributes:
+      label: Policy
+      description: Which policy do you need an exception for?
+      options:
+        - prevent-resource-deletion
+        - allowed-iam-roles
+        - allowed-regions
+        - (other — describe in Reason)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope_type
+    attributes:
+      label: Exception scope type
+      description: |
+        - **resources** — exempt specific resource addresses (most preferred)
+        - **resource_types** — exempt all resources of a type in this workspace
+        - **blanket** — exempt the whole policy in this workspace (least preferred)
+      options:
+        - resources
+        - resource_types
+        - blanket
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope_values
+    attributes:
+      label: Scope values
+      description: |
+        One per line. Required unless scope type is "blanket".
+        - For **resources**: full addresses, e.g. `google_project.my_project`
+        - For **resource_types**: types, e.g. `google_service_account`
+      placeholder: |
+        google_service_account.ci_runner
+        google_service_account.deploy_bot
+    validations:
+      required: false
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: Business justification
+      description: Why is this exception needed? What breaks without it?
+    validations:
+      required: true
+
+  - type: input
+    id: requested_by
+    attributes:
+      label: Requested by
+      placeholder: your GitHub username or corp ID
+    validations:
+      required: true
+
+  - type: input
+    id: expiration_date
+    attributes:
+      label: Expiration date (YYYY-MM-DD)
+      description: Must be a future date. Exceptions are time-bound.
+      placeholder: "2026-10-31"
+    validations:
+      required: true
+
+  - type: input
+    id: ticket
+    attributes:
+      label: Tracking ticket
+      placeholder: e.g. JIRA-12345
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: Acknowledgements
+      options:
+        - label: I understand this exception is time-bound and will expire on the date above.
+          required: true
+        - label: I have scoped this to the narrowest level possible (prefer resources over blanket).
+          required: true
