@@ -84,7 +84,7 @@ body:
     attributes:
       label: Expiry date
       description: "Last day the exception is valid (UTC, YYYY-MM-DD), or the literal 'never' for a permanent exception (discouraged — justify above)."
-      placeholder: 2026-12-31
+      placeholder: "2026-12-31"
     validations:
       required: true
   - type: textarea
