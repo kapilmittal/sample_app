@@ -1,122 +1,99 @@
-name: Sentinel Policy Exception Request
-description: Request a time-bound exception to a Sentinel policy
-title: "[Exception] <policy> — <workspace>"
-labels: ["exception-request"]
+name: "Exception request: resource-address scope"
+description: "Exempt specific resource ADDRESSES from a Sentinel policy (or the whole policy for a workspace). Use this for most policies."
+title: "[Exception][Resource]: <policy> in <workspace>"
+labels: ["exception-request", "exc-resource-address"]
 body:
   - type: markdown
     attributes:
       value: |
-        ## Policy Exception Request
-        Fill in every required field. Once submitted, this request is validated
-        and — if approved — a PR is opened adding it to the exceptions file.
-        **Submitting this form does not grant an exception; it only proposes one.**
-
+        Request an exception that exempts one or more **resource addresses** from a Sentinel policy in a specific workspace.
+        Leave **Resource addresses** empty to request a **blanket** exception for the whole policy in that workspace.
+        See the [Sentinel Policy Exception Workflow](https://paypal.atlassian.net/wiki/spaces/CLPE/pages/3023971297) for guidance.
   - type: input
-    id: organization
+    id: org
     attributes:
-      label: TFE Organization
-      placeholder: e.g. cnlz-gcp-org
+      label: Organization
+      description: The TFE organization name.
+      placeholder: gcp-dev-cnlz-portfolios
     validations:
       required: true
-
   - type: input
-    id: workspace_name
+    id: workspace
     attributes:
-      label: Workspace name
-      placeholder: e.g. crypto-mgmt-prod
+      label: Workspace (ID or name)
+      description: The workspace id (ws-…, preferred) or its name. Matched against either.
+      placeholder: d-usc1-app-int  or  ws-AbC123…
     validations:
       required: true
-
-  - type: input
-    id: workspace_id
+  - type: dropdown
+    id: env
     attributes:
-      label: Workspace ID
-      description: The TFE workspace ID (starts with ws-)
-      placeholder: e.g. ws-AbCdEf123456
+      label: Environment
+      description: Which policy-set environment this workspace runs in (selects the exceptions file).
+      options:
+        - dev
+        - infradev
+        - prod
     validations:
       required: true
-
   - type: dropdown
     id: policy
     attributes:
-      label: Policy
-      description: Which policy do you need an exception for?
+      label: "Policy (domain: policy name)"
+      description: "The domain-qualified Sentinel exception policy to request against. Only address-scoped policies are listed here."
       options:
-        - prevent-resource-deletion
-        - allowed-iam-roles
-        - allowed-regions
-        - (other — describe in Reason)
+        - "ccoe-mgmt: allowed-iam-roles"
+        - "ccoe-mgmt: allowed-machine-types"
+        - "ccoe-mgmt: approved-services-validation"
+        - "ccoe-mgmt: bigquery-encryption"
+        - "ccoe-mgmt: cloud-sql-encryption"
+        - "ccoe-mgmt: cloud-sql-ssl"
+        - "ccoe-mgmt: denied-iam-roles-playground"
+        - "ccoe-mgmt: denied-provisioners"
+        - "ccoe-mgmt: gce-disk-encryption"
+        - "ccoe-mgmt: gcs-encryption"
+        - "ccoe-mgmt: gcs-public-access"
+        - "ccoe-mgmt: prevent-privileged-iam-bindings"
+        - "ccoe-mgmt: prevent-resource-deletion"
+        - "ccoe-mgmt: prevent-user-iam-bindings"
+        - "ccoe-mgmt: project-configuration-standards"
+        - "ccoe-mgmt: project-labels-validation"
+        - "ccoe-mgmt: project-metadata-validation"
+        - "ccoe-mgmt: project-naming-standards"
+        - "dns: dns-name-validation"
+        - "dns: dns-record-set-name-validation"
+        - "fleet-mgmt: gke-allowed-machine-types"
+        - "fleet-mgmt: gke-cluster-operational-config"
+        - "fleet-mgmt: gke-network-validations"
+        - "fleet-mgmt: gke-node-pool-config-validations"
+        - "fleet-mgmt: gke-observability-validations"
+        - "fleet-mgmt: gke-required-labels"
+        - "fleet-mgmt: gke-security-validations"
     validations:
       required: true
-
-  - type: dropdown
-    id: scope_type
-    attributes:
-      label: Exception scope type
-      description: |
-        - **resources** — exempt specific resource addresses (most preferred)
-        - **resource_types** — exempt all resources of a type in this workspace
-        - **blanket** — exempt the whole policy in this workspace (least preferred)
-      options:
-        - resources
-        - resource_types
-        - blanket
-    validations:
-      required: true
-
-  - type: textarea
-    id: scope_values
-    attributes:
-      label: Scope values
-      description: |
-        One per line. Required unless scope type is "blanket".
-        - For **resources**: full addresses, e.g. `google_project.my_project`
-        - For **resource_types**: types, e.g. `google_service_account`
-      placeholder: |
-        google_service_account.ci_runner
-        google_service_account.deploy_bot
-    validations:
-      required: false
-
   - type: textarea
     id: reason
     attributes:
-      label: Business justification
-      description: Why is this exception needed? What breaks without it?
+      label: Reason / justification
+      description: Why is this exception needed? Include business context.
+      placeholder: Legacy bucket cannot be re-encrypted without downtime; migration tracked separately.
     validations:
       required: true
-
   - type: input
-    id: requested_by
+    id: expiry_date
     attributes:
-      label: Requested by
-      placeholder: your GitHub username or corp ID
+      label: Expiry date
+      description: "Last day the exception is valid (UTC, YYYY-MM-DD), or the literal 'never' for a permanent exception (discouraged — justify above)."
+      placeholder: 2026-12-31
     validations:
       required: true
-
-  - type: input
-    id: expiration_date
+  - type: textarea
+    id: resources
     attributes:
-      label: Expiration date (YYYY-MM-DD)
-      description: Must be a future date. Exceptions are time-bound.
-      placeholder: "2026-10-31"
-    validations:
-      required: true
-
-  - type: input
-    id: ticket
-    attributes:
-      label: Tracking ticket
-      placeholder: e.g. JIRA-12345
+      label: Resource addresses (one per line)
+      description: "Terraform resource addresses to exempt, one per line. Wildcards supported: name[*] and prefix_*. Leave EMPTY for a blanket exception covering the whole policy in this workspace."
+      placeholder: |
+        google_storage_bucket.legacy
+        module.data.google_storage_bucket.archive[*]
     validations:
       required: false
-
-  - type: checkboxes
-    id: acknowledgements
-    attributes:
-      label: Acknowledgements
-      options:
-        - label: I understand this exception is time-bound and will expire on the date above.
-          required: true
-        - label: I have scoped this to the narrowest level possible (prefer resources over blanket).
-          required: true
